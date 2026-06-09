@@ -12,22 +12,8 @@ const pool = require('./db');
 
 const app = express();
 
-// CORS
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:5500',
-  'http://127.0.0.1:5500',
-  'http://localhost:3001',
-  'https://nomaanibrahim0336-ctrl.github.io'
-].filter(Boolean);
-
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin || allowedOrigins.some(o => origin.startsWith(o))) return cb(null, true);
-    cb(new Error(`CORS blocked: ${origin}`));
-  },
-  credentials: true
-}));
+// CORS — allow all origins (internal team tool)
+app.use(cors({ origin: true, credentials: true }));
 
 app.use(express.json());
 
