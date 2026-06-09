@@ -56,6 +56,14 @@ async function start() {
     console.error('Schema init error:', err.message);
   }
 
+  // Run column migrations (safe to run every startup)
+  try {
+    await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS scheduled_till DATE`);
+    console.log('Migrations applied');
+  } catch (err) {
+    console.error('Migration error:', err.message);
+  }
+
   // Seed users with correct bcrypt hashes
   try {
     const bcrypt = require('bcryptjs');
