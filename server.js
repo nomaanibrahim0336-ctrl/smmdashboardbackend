@@ -1,16 +1,24 @@
 require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
-const pool    = require('./db');
+
+console.log('Starting SMM-MANAGER API...');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT);
+console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);
+console.log('JWT_SECRET set:', !!process.env.JWT_SECRET);
+
+const pool = require('./db');
 
 const app = express();
 
-// CORS — allow GitHub Pages frontend
+// CORS
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:5500',
   'http://127.0.0.1:5500',
-  'http://localhost:3001'
+  'http://localhost:3001',
+  'https://nomaanibrahim0336-ctrl.github.io'
 ].filter(Boolean);
 
 app.use(cors({
@@ -41,11 +49,20 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Init DB tables then start
 async function start() {
-  const fs   = require('fs');
-  const path = require('path');
+  // Test DB connection first
   try {
+    await pool.query('SELECT 1');
+    console.log('Database connection OK');
+  } catch (err) {
+    console.error('Database connection FAILED:', err.message);
+    process.exit(1);
+  }
+
+  // Run schema
+  try {
+    const fs   = require('fs');
+    const path = require('path');
     const schema = fs.readFileSync(path.join(__dirname, 'db', 'schema.sql'), 'utf8');
     await pool.query(schema);
     console.log('Database schema ready');
@@ -54,7 +71,9 @@ async function start() {
   }
 
   const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => console.log(`SMM-MANAGER API running on port ${PORT}`));
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`SMM-MANAGER API running on port ${PORT}`);
+  });
 }
 
 start();
