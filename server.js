@@ -80,15 +80,13 @@ async function start() {
       { name:'Zaid',  email:'zaid@smm.com',  password:'exec123',  role:'creator',         avatar:'Z' },
     ];
     for (const u of users) {
-      const { rows } = await pool.query('SELECT id FROM users WHERE email=$1', [u.email]);
-      if (!rows.length) {
-        const hash = await bcrypt.hash(u.password, 10);
-        await pool.query(
-          'INSERT INTO users (name,email,password,role,avatar) VALUES ($1,$2,$3,$4,$5)',
-          [u.name, u.email, hash, u.role, u.avatar]
-        );
-        console.log(`Seeded user: ${u.email}`);
-      }
+      const hash = await bcrypt.hash(u.password, 10);
+      await pool.query(
+        `INSERT INTO users (name,email,password,role,avatar) VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (email) DO UPDATE SET password=$3, name=$1, role=$4, avatar=$5`,
+        [u.name, u.email, hash, u.role, u.avatar]
+      );
+      console.log(`Seeded user: ${u.email}`);
     }
     console.log('Users ready');
   } catch (err) {
