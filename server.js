@@ -70,6 +70,31 @@ async function start() {
     console.error('Schema init error:', err.message);
   }
 
+  // Seed users with correct bcrypt hashes
+  try {
+    const bcrypt = require('bcryptjs');
+    const users = [
+      { name:'Admin', email:'admin@smm.com', password:'admin123', role:'admin',           avatar:'A' },
+      { name:'Noman', email:'noman@smm.com', password:'lead123',  role:'project_manager', avatar:'N' },
+      { name:'Faaiz', email:'faaiz@smm.com', password:'exec123',  role:'designer',        avatar:'F' },
+      { name:'Zaid',  email:'zaid@smm.com',  password:'exec123',  role:'creator',         avatar:'Z' },
+    ];
+    for (const u of users) {
+      const { rows } = await pool.query('SELECT id FROM users WHERE email=$1', [u.email]);
+      if (!rows.length) {
+        const hash = await bcrypt.hash(u.password, 10);
+        await pool.query(
+          'INSERT INTO users (name,email,password,role,avatar) VALUES ($1,$2,$3,$4,$5)',
+          [u.name, u.email, hash, u.role, u.avatar]
+        );
+        console.log(`Seeded user: ${u.email}`);
+      }
+    }
+    console.log('Users ready');
+  } catch (err) {
+    console.error('Seed error:', err.message);
+  }
+
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`SMM-MANAGER API running on port ${PORT}`);
