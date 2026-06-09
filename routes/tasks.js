@@ -90,7 +90,7 @@ router.post('/', async (req, res) => {
 
 // PUT /tasks/:id — update fields
 router.put('/:id', async (req, res) => {
-  const { status, priority, assigned_to, designer, due_date, posted_date,
+  const { status, priority, assigned_to, designer, due_date, posted_date, scheduled_till,
           changes_requested, change_note, timeline_action } = req.body;
   try {
     await pool.query(
@@ -98,11 +98,12 @@ router.put('/:id', async (req, res) => {
          status=COALESCE($1,status), priority=COALESCE($2,priority),
          assigned_to=COALESCE($3,assigned_to), designer=COALESCE($4,designer),
          due_date=COALESCE($5,due_date), posted_date=COALESCE($6,posted_date),
-         changes_requested=COALESCE($7,changes_requested),
-         change_note=COALESCE($8,change_note), updated_at=NOW()
-       WHERE id=$9`,
+         scheduled_till=COALESCE($7,scheduled_till),
+         changes_requested=COALESCE($8,changes_requested),
+         change_note=COALESCE($9,change_note), updated_at=NOW()
+       WHERE id=$10`,
       [status, priority, assigned_to, designer, due_date||null, posted_date||null,
-       changes_requested, change_note, req.params.id]
+       scheduled_till||null, changes_requested, change_note, req.params.id]
     );
     if (timeline_action) {
       await pool.query(
